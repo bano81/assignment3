@@ -41,22 +41,46 @@ static BlockHeader * last = NULL;
  * @brief Find the block header for the previous block in the list
  */
 static BlockHeader* find_previous_block(BlockHeader *block) {
+  if(block == NULL || first == NULL) return NULL;
+  if(block == first) return last;  // In circular list, last points to first  
   BlockHeader *current_block = first;
-  BlockHeader *prev = NULL;
-  do{
-    BlockHeader *next_block = current_block->next; //GET_NEXT(current_block);
-    if(next_block == block) return current_block;
-    prev = current_block;
+  BlockHeader *prev_block = NULL;  
+  do {
+    BlockHeader *next_block = GET_NEXT(current_block);  // Use GET_NEXT to mask flags    
+    SET_FREE(next_block, GET_FREE(current_block)); // Ensure flags are preserved
+    if (next_block == block) {
+      return current_block;  // Found the previous block
+    }    
+    prev_block = current_block;
     current_block = next_block;
-  } while(current_block != first);
-  return NULL;
+    if (current_block == first) {
+      break;  // We've gone full circle without finding the block
+    }    
+  } while (current_block != first);  
+  return NULL;  // Block not found in the list
 }
+
+
+
 
 /**
  * @name  coalesce_free_blocks
  * @brief Merge adjacent free blocks to reduce fragmentation
  */
 static void coalesce_free_blocks(BlockHeader *block){
+  if(block == NULL || GET_FREE(block) == 0 || block == last) return;
+  BlockHeader * next_block = GET_NEXT(block);
+  if(block-> next !=last && block->next != last && GET_FREE(block->next)==1){
+    block->next = GET_NEXT(next_block);
+    SET_FREE(block, 1);
+  }
+  /*BlockHeader * prev_block = find_previous_block(block);
+  printf("Coalescing: block=%p, prev_block=%p, next_block=%p\n", block, prev_block, next_block);
+  if(prev_block != NULL && prev_block->next != last && GET_FREE(prev_block)==1){
+    prev_block->next = GET_NEXT(block);
+    SET_FREE(prev_block, 1);
+    block = prev_block;
+  }*/
   return;
 }
 
@@ -129,11 +153,13 @@ void* simple_malloc(size_t size) {
         void * result = (void*)current->user_block;
         current = GET_NEXT(current);
         return result;
+      }else {
+        printf("Block too small: requested %lu, available %lu\n", aligned_size, current_size);
       }
     }    
     current = GET_NEXT(current);
     iteration++;    
-    if (iteration > 10) {
+    if (iteration > 100) {
       break;
     }
   } while (current != search_start);
