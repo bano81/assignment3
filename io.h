@@ -27,4 +27,5 @@ write_string(char* s);
 extern int
 write_int(int n);
 
+
 #endif /* IO_H_ */

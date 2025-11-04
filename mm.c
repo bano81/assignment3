@@ -40,7 +40,7 @@ static BlockHeader * last = NULL;
  * @name  find_previous_block
  * @brief Find the block header for the previous block in the list
  */
-static BlockHeader* find_previous_block(BlockHeader *block) {
+/*static BlockHeader* find_previous_block(BlockHeader *block) {
   if(block == NULL || first == NULL) return NULL;
   if(block == first) return last;  // In circular list, last points to first  
   BlockHeader *current_block = first;
@@ -58,31 +58,21 @@ static BlockHeader* find_previous_block(BlockHeader *block) {
     }    
   } while (current_block != first);  
   return NULL;  // Block not found in the list
-}
-
-
-
+}*/
 
 /**
  * @name  coalesce_free_blocks
  * @brief Merge adjacent free blocks to reduce fragmentation
  */
 static void coalesce_free_blocks(BlockHeader *block){
-  if(block == NULL || GET_FREE(block) == 0 || block == last) return;
+  if(block == NULL || GET_FREE(block) == 0 || block == last) return;  
+  uint16_t flag = GET_FREE(block);
   BlockHeader * next_block = GET_NEXT(block);
-  if(block-> next !=last && block->next != last && GET_FREE(block->next)==1){
-    block->next = GET_NEXT(next_block);
-    SET_FREE(block, 1);
+  if(next_block != last && GET_FREE(next_block) == 1){
+    SET_NEXT(block, GET_NEXT(next_block));
   }
-  /*BlockHeader * prev_block = find_previous_block(block);
-  printf("Coalescing: block=%p, prev_block=%p, next_block=%p\n", block, prev_block, next_block);
-  if(prev_block != NULL && prev_block->next != last && GET_FREE(prev_block)==1){
-    prev_block->next = GET_NEXT(block);
-    SET_FREE(prev_block, 1);
-    block = prev_block;
-  }*/
-  return;
 }
+
 
 /**
  * @name    simple_init
@@ -124,14 +114,15 @@ void* simple_malloc(size_t size) {
     simple_init();
     if (first == NULL) return NULL;
   }
-
+  /*if(GET_FREE(first)==1) {
+    current = first;
+  }
+  coalesce_free_blocks(current);*/
   size_t aligned_size = ALIGN(size); 
   if (aligned_size < MIN_SIZE) aligned_size = MIN_SIZE;
-
   BlockHeader * search_start = current;
   int iteration = 0;
   do {     
-    // CORRECTED: Look for FREE blocks (flag = 1)
     if (GET_FREE(current) == 1) {
       coalesce_free_blocks(current);
       size_t current_size = SIZE(current);      
@@ -141,8 +132,7 @@ void* simple_malloc(size_t size) {
           size_t total_needed = sizeof(BlockHeader) + aligned_size;
           uintptr_t new_block_addr = (uintptr_t)current + total_needed;
           new_block_addr = ALIGN(new_block_addr);
-          BlockHeader * new_block = (BlockHeader *) new_block_addr;    
-          
+          BlockHeader * new_block = (BlockHeader *) new_block_addr;              
           SET_NEXT(new_block, GET_NEXT(current));
           SET_FREE(new_block, 1);
           SET_NEXT(current, new_block);
@@ -151,7 +141,6 @@ void* simple_malloc(size_t size) {
           SET_FREE(current, 0);
         }
         void * result = (void*)current->user_block;
-        current = GET_NEXT(current);
         return result;
       }else {
         printf("Block too small: requested %lu, available %lu\n", aligned_size, current_size);
