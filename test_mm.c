@@ -24,26 +24,26 @@ int main(int argc, char ** argv) {
 
   void * a = simple_malloc(0x100);
   void * b = simple_malloc(0x200);
-  void *c = simple_malloc(0x300);//
-  printf("First round: a=%p, b=%p, c=%p\n", a, b, c); //
+  void * c = simple_malloc(0x300);//
+  void * d = simple_malloc(0x100);//
+  printf("First round: a=%p, b=%p, c=%p, d=%p\n", a, b, c, d); //
   simple_block_dump(); //bno
 
-  simple_free(b);//
-  simple_free(a);
   //simple_free(b);//
-
+  simple_free(a);
   simple_free(c);//
   printf("After free a, b, c:\n"); //
   simple_block_dump(); //bno
 
-  a = simple_malloc(0x400); //
-  c = simple_malloc(0x300);//
+  a = simple_malloc(0x200); //
+  simple_block_dump(); //
+  c = simple_malloc(0x50);//
   printf("Second round: a=%p, b=%p, c=%p\n", a, b, c); //
   simple_block_dump(); //
 
-  simple_malloc(0x100);
-  simple_free(b);
-  simple_block_dump();
+  //simple_malloc(0x100);
+  //simple_free(b);
+ // simple_block_dump();
   
   return 0;
 }

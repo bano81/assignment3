@@ -116,8 +116,9 @@ void* simple_malloc(size_t size) {
   }
   /*if(GET_FREE(first)==1) {
     current = first;
-  }
-  coalesce_free_blocks(current);*/
+  }*/
+  current = first;
+  coalesce_free_blocks(current);
   size_t aligned_size = ALIGN(size); 
   if (aligned_size < MIN_SIZE) aligned_size = MIN_SIZE;
   BlockHeader * search_start = current;
@@ -167,6 +168,7 @@ void simple_free(void * ptr) {
   }
   SET_FREE(block, 1);
   coalesce_free_blocks(block);
+  ptr = NULL; // Prevent dangling pointer
 }
 
 #include "mm_aux.c"

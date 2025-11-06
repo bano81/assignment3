@@ -27,5 +27,10 @@ write_string(char* s);
 extern int
 write_int(int n);
 
+extern struct node *add_to_list(struct node *head, int i);
+extern struct node *delete_node(struct node *head);
+extern void free_list(struct node *head);
+extern struct node *reverse_list(struct node *head);
+extern void display_list(struct node *head);
 
 #endif /* IO_H_ */
